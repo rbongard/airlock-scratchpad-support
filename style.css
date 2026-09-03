@@ -1,0 +1,160 @@
+/* Shared with the published design and positioning documents, so the support
+   site reads as part of the same product rather than a bolted-on afterthought. */
+
+:root {
+  --ground:    #f3f5f8;
+  --surface:   #ffffff;
+  --sunk:      #e9edf2;
+  --ink:       #131820;
+  --slate:     #59657a;
+  --faint:     #8b98ab;
+  --rule:      #dbe2ea;
+  --accent:    #1d4f8c;
+  --accent-dim:#e2ebf6;
+  --amber:     #9a5c0c;
+  --amber-dim: #f7ecda;
+  --measure:   63ch;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground:    #0e1217;
+    --surface:   #161c24;
+    --sunk:      #1c232d;
+    --ink:       #e7ecf3;
+    --slate:     #9dabbd;
+    --faint:     #6d7c90;
+    --rule:      #29323e;
+    --accent:    #79aae8;
+    --accent-dim:#1a2b40;
+    --amber:     #d9a052;
+    --amber-dim: #332614;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 0 1.75rem 6rem;
+}
+
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+
+h1 {
+  font-family: "Instrument Serif", Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  font-size: 3.25rem;
+  line-height: 1;
+  letter-spacing: -0.015em;
+}
+
+h1 .second { display: block; color: var(--slate); font-size: 0.55em; }
+
+h2 {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-weight: 400;
+  font-size: 2rem;
+  line-height: 1.1;
+  margin: 3rem 0 1rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--rule);
+}
+
+h3 { font-size: 1.1rem; font-weight: 600; margin: 1.75rem 0 0.4rem; }
+
+p { margin: 0 0 1rem; max-width: var(--measure); }
+ul { margin: 0 0 1.15rem; padding-left: 1.25rem; max-width: var(--measure); }
+li { margin-bottom: 0.4rem; }
+
+a { color: var(--accent); text-underline-offset: 2px; }
+
+header {
+  padding: 4.5rem 0 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.lede { font-size: 1.25rem; line-height: 1.5; color: var(--slate); max-width: var(--measure); }
+
+.tag {
+  align-self: flex-start;
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  padding: 0.2em 0.5em;
+}
+
+code, kbd {
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.87em;
+  background: var(--sunk);
+  padding: 0.12em 0.4em;
+  border-radius: 3px;
+}
+
+kbd { border: 1px solid var(--rule); }
+
+.callout {
+  border-left: 3px solid var(--amber);
+  background: var(--amber-dim);
+  padding: 1.1rem 1.25rem;
+  margin: 0 0 1.5rem;
+  max-width: var(--measure);
+}
+.callout p:last-child { margin-bottom: 0; }
+.callout strong { color: var(--amber); }
+
+.qa {
+  border-top: 1px solid var(--rule);
+  padding-top: 1.25rem;
+  margin-top: 1.25rem;
+}
+.qa:first-of-type { border-top: none; }
+.qa h3 { margin-top: 0; }
+
+.contact {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: 1.5rem 1.5rem;
+  margin-top: 1.5rem;
+  max-width: var(--measure);
+}
+.contact p:last-child { margin-bottom: 0; }
+
+nav.crumbs {
+  padding: 1.5rem 0 0;
+  font-size: 0.9rem;
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+footer {
+  margin-top: 4rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.82rem;
+  color: var(--faint);
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

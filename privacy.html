@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Airlock Scratchpad — Privacy Policy</title>
+<meta name="description" content="Privacy policy for Airlock Scratchpad. The app collects no data, has no network code, and no account.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="tag">Effective 3 September 2026</span>
+    <h1>Privacy Policy</h1>
+    <p class="lede">Airlock Scratchpad collects nothing. This page explains what that means in practice, and how it is enforced rather than merely promised.</p>
+  </header>
+
+  <h2>What is collected</h2>
+
+  <p><strong>Nothing.</strong> Not analytics, not crash reports, not usage statistics, not an email address, not a device identifier, not an IP address.</p>
+
+  <p>There is no account to create and no sign-in. The developer has no way to know that you have installed the app, let alone what you keep in it.</p>
+
+  <h2>Why that claim is verifiable</h2>
+
+  <p>Privacy policies usually ask you to take a promise on trust. This one rests on something structural instead: <strong>the app contains no networking code at all.</strong></p>
+
+  <ul>
+    <li>It makes no HTTP requests, opens no sockets, and links no analytics or advertising SDK.</li>
+    <li>It runs inside Apple's App Sandbox, and its entitlements do not include network access of any kind — neither outgoing nor incoming.</li>
+    <li>macOS enforces that at the operating-system level. Even a bug could not send your data anywhere, because the sandbox would refuse the connection.</li>
+  </ul>
+
+  <p>The app's complete set of permissions is: run sandboxed, read a file you explicitly choose, and print. That is all of them.</p>
+
+  <h2>Where your data lives</h2>
+
+  <p>Everything you store is kept in a single encrypted file inside the app's own sandbox container on your Mac.</p>
+
+  <ul>
+    <li>Encrypted with <strong>AES-256-GCM</strong>, using Apple's CryptoKit.</li>
+    <li>The encryption key is wrapped by a key held in your Mac's <strong>Secure Enclave</strong>, which cannot be exported from the hardware.</li>
+    <li>Contents are decrypted into memory only while the vault is unlocked, and dropped when it locks.</li>
+    <li>No copy is written anywhere else — no temporary files, no logs, no caches.</li>
+  </ul>
+
+  <p>The developer cannot read your vault. Neither can Apple. There is no recovery mechanism, because a recovery mechanism would be a way in.</p>
+
+  <h2>The clipboard</h2>
+
+  <p>When you copy a secret, it goes to your clipboard so you can paste it — that is the point of the app. Two things reduce the exposure:</p>
+
+  <ul>
+    <li>Copied secrets are marked as concealed, which well-behaved clipboard-history tools honour by not recording them.</li>
+    <li>The clipboard is cleared after a delay you control in Settings, and only if it still holds what the app put there.</li>
+  </ul>
+
+  <p>Once a value is on your clipboard, what other software on your Mac does with it is outside this app's control.</p>
+
+  <h2>Files you import</h2>
+
+  <p>Importing a <code>.env</code> or Markdown file reads that file and copies the parts you confirm into your vault. The original is never modified, moved or deleted. The app has read-only access to files you pick, and write access is used for exactly one thing: saving a PDF when you choose "Save as PDF" from the print dialog.</p>
+
+  <h2>Deleting your data</h2>
+
+  <p>Delete individual items in the app, or empty the Recycle Bin to destroy them immediately. To remove everything, delete the app and its container:</p>
+
+  <p><code>~/Library/Containers/com.rabcon.AirlockScratchpad</code></p>
+
+  <p>Nothing survives elsewhere, because nothing was ever anywhere else.</p>
+
+  <h2>Children</h2>
+
+  <p>The app is a developer tool and is not directed at children. Since it collects no data from anyone, it collects none from children either.</p>
+
+  <h2>Changes</h2>
+
+  <p>If this policy ever changes, the revised version will be posted here with a new effective date. Any change that introduced data collection would also require a new App Store submission and a change to the app's declared permissions, both of which are visible to you before you update.</p>
+
+  <h2>Contact</h2>
+
+  <div class="contact">
+    <p>Questions about this policy:<br>
+    <a href="https://github.com/rbongard/airlock-scratchpad-support/issues">github.com/rbongard/airlock-scratchpad-support/issues</a></p>
+  </div>
+
+  <nav class="crumbs">
+    <a href="index.html">Support</a>
+  </nav>
+
+  <footer>
+    <span>Airlock Scratchpad — macOS</span>
+    <span>© 2026 Richard Bongard</span>
+  </footer>
+
+</div>
+</body>
+</html>

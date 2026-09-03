@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Airlock Scratchpad — Support</title>
+<meta name="description" content="Support and help for Airlock Scratchpad, a secure scratchpad for short-lived developer secrets on macOS.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="tag">macOS · Support</span>
+    <h1>Airlock<span class="second">Scratchpad</span></h1>
+    <p class="lede">A secure scratchpad for the developer secrets you're working with right now — one that encrypts them, and forgets them on purpose.</p>
+  </header>
+
+  <div class="callout">
+    <p><strong>Airlock Scratchpad is not a password manager.</strong> Anything that has to outlive the work you're doing today belongs in a real vault — 1Password, Bitwarden, HashiCorp Vault, AWS Secrets Manager. This is the layer above that: somewhere to put the keys and tokens you're actively using, instead of a scratch file.</p>
+  </div>
+
+  <h2>Getting started</h2>
+
+  <h3>1. Set up the vault</h3>
+  <p>On first launch you create a vault. It's protected by a key held in this Mac's Secure Enclave, unlocked with Touch ID or your login password.</p>
+
+  <h3>2. Capture a secret</h3>
+  <p>Copy a key from wherever it lives, then press <kbd>⌘⇧V</kbd>. The app works out what it is — a GitHub token, an AWS key, a certificate, a database URL — and opens the matching template with the fields already filled in.</p>
+  <p>Not <kbd>⌘V</kbd>: that belongs to the system's paste, and taking it would make it impossible to paste into any field in the app itself.</p>
+
+  <h3>3. Add a recovery code</h3>
+  <p>Settings → Credentials → <strong>Generate a recovery code</strong>. Print it or write it down. This is the only thing that opens your vault if the Mac is lost, and it is shown exactly once.</p>
+
+  <h2>Questions</h2>
+
+  <div class="qa">
+    <h3>My secret disappeared. Where did it go?</h3>
+    <p>It expired. Everything in Airlock has a deadline — three days by default — because a copy of a secret is not a secret's home. You can change the default in Settings, change it on any individual item, or turn on the Recycle Bin so expired items go there instead of being destroyed.</p>
+  </div>
+
+  <div class="qa">
+    <h3>Why does it ask for Touch ID twice?</h3>
+    <p>Unlocking shows you <em>what</em> you have — names, types, deadlines. Seeing or copying an actual secret asks again. Being in the app is not the same as being allowed to see a credential. After the second unlock there's a grace period, so you won't be prompted repeatedly, but you still press Reveal on each secret you want to see.</p>
+  </div>
+
+  <div class="qa">
+    <h3>I lost my Mac. Can I get my vault back?</h3>
+    <p>Only if you set up a recovery code or a password backup. The Secure Enclave key is bound to that specific Mac and cannot be exported, copied or recovered — not by you, and not by anyone else. There is no server, no account and no reset link.</p>
+    <p>That's the security model working as designed, and it's why the recovery code exists. Set one up before you need it.</p>
+  </div>
+
+  <div class="qa">
+    <h3>Does it sync between my Macs?</h3>
+    <p>No. There's no sync, no iCloud, no account and no network code of any kind. A secret you need on two machines belongs in a real vault with proper access control.</p>
+  </div>
+
+  <div class="qa">
+    <h3>Can I share a secret with my team?</h3>
+    <p>No, and deliberately so. Shared credentials need access control and an audit trail; building half of that would be worse than not building it, because it invites a use it can't safely support.</p>
+  </div>
+
+  <div class="qa">
+    <h3>The Scrub button didn't find my secret.</h3>
+    <p>Scrubbing is deliberately cautious. It only removes things it's certain about — recognisable vendor tokens, JSON web tokens, passwords inside connection strings, and named assignments that look like credentials. The entropy heuristic alone isn't used, because a git SHA or a base64 blob would trip it, and a scrubber that mangles ordinary log lines is one you'd turn off.</p>
+    <p><strong>Always read the result before you send it.</strong></p>
+  </div>
+
+  <div class="qa">
+    <h3>Everything from my .env imported as an API Key.</h3>
+    <p>Fixed in a later version. Plain configuration now imports as a Variable, which is visible without a reveal and doesn't get buried among real credentials. Items imported before the fix keep their old type — delete and re-import them, or change the type by hand.</p>
+  </div>
+
+  <div class="qa">
+    <h3>Where is my data stored?</h3>
+    <p>One encrypted file inside the app's own sandbox container on your Mac. Nothing is written anywhere else, and nothing leaves the machine. See the <a href="privacy.html">privacy policy</a>.</p>
+  </div>
+
+  <div class="qa">
+    <h3>Is it open source?</h3>
+    <p>No — but the full design document is published, including the threat model, the cryptographic choices and the trade-offs behind them. "Trust me" isn't an argument you can make about a tool that holds credentials.</p>
+  </div>
+
+  <h2>Getting help</h2>
+
+  <div class="contact">
+    <p><strong>Report a bug or ask a question:</strong><br>
+    <a href="https://github.com/rbongard/airlock-scratchpad-support/issues">github.com/rbongard/airlock-scratchpad-support/issues</a></p>
+    <p>Airlock Scratchpad is made by one person. Issues are read and answered, though not always quickly.</p>
+    <p><strong>Never include a real credential in a bug report.</strong> If a secret is involved, describe its shape — "a 40-character hex string", "a PEM block" — rather than pasting it. The Scrub button exists for exactly this.</p>
+  </div>
+
+  <nav class="crumbs">
+    <a href="privacy.html">Privacy policy</a>
+  </nav>
+
+  <footer>
+    <span>Airlock Scratchpad — macOS</span>
+    <span>© 2026 Richard Bongard</span>
+  </footer>
+
+</div>
+</body>
+</html>
