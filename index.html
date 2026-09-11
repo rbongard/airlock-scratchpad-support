@@ -26,16 +26,23 @@
   <h2>Getting started</h2>
 
   <h3>1. Set up the vault</h3>
-  <p>On first launch you create a vault. It's protected by a key held in this Mac's Secure Enclave, unlocked with Touch ID or your login password.</p>
+  <p>On first launch you create a vault. It's protected by a key held in this Mac's Secure Enclave, unlocked with Touch ID — or with your login password on a Mac that has no Touch ID.</p>
 
   <h3>2. Capture a secret</h3>
   <p>Copy a key from wherever it lives, then press <kbd>⌘⇧V</kbd>. The app works out what it is — a GitHub token, an AWS key, a certificate, a database URL — and opens the matching template with the fields already filled in.</p>
   <p>Not <kbd>⌘V</kbd>: that belongs to the system's paste, and taking it would make it impossible to paste into any field in the app itself.</p>
+  <p>To capture without switching to Airlock first, turn on <kbd>⌥⌘V</kbd> under Settings → Capture. It works from any app.</p>
 
   <h3>3. Add a recovery code</h3>
   <p>Settings → Credentials → <strong>Generate a recovery code</strong>. Print it or write it down. This is the only thing that opens your vault if the Mac is lost, and it is shown exactly once.</p>
 
   <h2>Questions</h2>
+
+  <div class="qa">
+    <h3>I closed the window and now I can't get it back.</h3>
+    <p>Closing the window locks the vault and leaves Airlock running in the menu bar — a window you can't see isn't one you're watching. There are three ways back: <strong>Window → Airlock Scratchpad</strong>, the padlock icon in the menu bar, or the Dock icon.</p>
+    <p>The padlock tells you the state without opening anything: the shackle is closed when the vault is locked, open when it isn't.</p>
+  </div>
 
   <div class="qa">
     <h3>My secret disappeared. Where did it go?</h3>
@@ -54,6 +61,25 @@
   </div>
 
   <div class="qa">
+    <h3>Can Airlock generate a secret for me?</h3>
+    <p>Yes. Press <kbd>⌘N</kbd>, pick a type, then <strong>Generate a value</strong>: passwords, passphrases, hex and base64 tokens, UUIDs, and the values particular frameworks expect — a Django <code>SECRET_KEY</code>, a Rails <code>secret_key_base</code>, a JWT signing secret, <code>NEXTAUTH_SECRET</code>, a Flask <code>SECRET_KEY</code>, an AES-256 key. Each shows its strength in bits.</p>
+    <p>The value is encrypted, named and expiring from the moment it exists, rather than sitting in a terminal buffer until something scrolls it away.</p>
+  </div>
+
+  <div class="qa">
+    <h3>The SSH key it generated has no passphrase.</h3>
+    <p>That's correct, and the item says so. Airlock can't add one: OpenSSH protects private keys with a bcrypt key-derivation function that macOS doesn't provide, and taking cryptography from a third party to get it would cost more than it buys.</p>
+    <p><strong>Copy as… → Add a passphrase</strong> gives you the exact <code>ssh-keygen -p</code> command to run once the key is on disk. The same warning appears on any unprotected SSH key in your vault, including ones you pasted in rather than generated.</p>
+    <p>Keys for CI or a deploy target usually <em>should</em> have no passphrase, since automation can't type one. The warning is there to make that a decision rather than an oversight.</p>
+  </div>
+
+  <div class="qa">
+    <h3>What are stacks?</h3>
+    <p>A stack lists the variables a piece of work usually needs. Select a project without selecting an item, choose the stacks it uses — PostgreSQL, AWS, Stripe, SMTP, Django, Next.js — and each variable is listed with what it's for and whether you have it yet.</p>
+    <p><strong>Choosing a stack creates nothing.</strong> It's a list of what to look for, not empty items waiting to be filled, so turning one on or off never touches a secret. Entries tick themselves when a matching value arrives, however it arrives — including a <code>.env</code> import — and go back to <em>not set</em> when one expires. That last part is expiry doing its job, not the checklist losing track.</p>
+  </div>
+
+  <div class="qa">
     <h3>Does it sync between my Macs?</h3>
     <p>No. There's no sync, no iCloud, no account and no network code of any kind. A secret you need on two machines belongs in a real vault with proper access control.</p>
   </div>
@@ -65,13 +91,22 @@
 
   <div class="qa">
     <h3>The Scrub button didn't find my secret.</h3>
-    <p>Scrubbing is deliberately cautious. It only removes things it's certain about — recognisable vendor tokens, JSON web tokens, passwords inside connection strings, and named assignments that look like credentials. The entropy heuristic alone isn't used, because a git SHA or a base64 blob would trip it, and a scrubber that mangles ordinary log lines is one you'd turn off.</p>
+    <p>Scrubbing runs in two passes. First it removes <strong>every secret your vault holds</strong> that appears in the text, by exact match — so an in-house token format nothing could have guessed is still caught, as long as you've stored it. Where the item has an export variable, the placeholder is <code>${THAT_NAME}</code>, so the text still says what was there.</p>
+    <p>Then shape rules run for anything your vault has never seen: recognisable vendor tokens, JSON web tokens, passwords inside connection strings, and named assignments that look like credentials. That second pass is deliberately cautious — a scrubber that mangles ordinary log lines is one you'd turn off — so a credential you've never stored, in a format it doesn't recognise, can still get through.</p>
     <p><strong>Always read the result before you send it.</strong></p>
   </div>
 
   <div class="qa">
-    <h3>Everything from my .env imported as an API Key.</h3>
-    <p>Fixed in a later version. Plain configuration now imports as a Variable, which is visible without a reveal and doesn't get buried among real credentials. Items imported before the fix keep their old type — delete and re-import them, or change the type by hand.</p>
+    <h3>How do I get a secret out in the form I actually need?</h3>
+    <p>The <strong>Copy</strong> button is a menu. Depending on the type it offers a connection URI, a ready-to-run <code>psql</code> or <code>mysql</code> command, a JDBC URL, a <code>.env</code> block, an <code>Authorization:</code> header, a <code>curl</code> invocation, an <code>ssh -i</code> command, a public key line, or a PEM bundle — plus a shell <code>export</code> quoted correctly for bash/zsh, fish or PowerShell.</p>
+    <p>The database commands pass the password through the environment rather than the command line, because arguments are visible to every process on the machine and land in your shell history.</p>
+    <p><strong>Copy Redacted</strong> is also there, and is the one entry that never asks for authentication — it discloses nothing, so you can say <em>which</em> key you mean in a ticket without handing over the key.</p>
+  </div>
+
+  <div class="qa">
+    <h3>What are the cheat sheets?</h3>
+    <p><strong>Help → Cheat Sheets</strong> has one-page references on handling credentials: secrets in Docker, secrets in Kubernetes, secrets in the shell, and SSH keys and agents. They're about where secrets leak and what to do instead — not general command reference.</p>
+    <p>Read one in place, copy it, or add it to your Documents, where it becomes an ordinary document you can edit and delete. <strong>Restore Original</strong> puts the shipped text back if you want it, and tells you what that discards first.</p>
   </div>
 
   <div class="qa">
@@ -99,7 +134,7 @@
 
   <footer>
     <span>Airlock Scratchpad — macOS</span>
-    <span>© 2026 Richard Bongard</span>
+    <span>© 2026 Richie Bongard</span>
   </footer>
 
 </div>
