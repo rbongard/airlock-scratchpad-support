@@ -1,7 +1,7 @@
 # Airlock Scratchpad — support site
 
-The public pages for Airlock Scratchpad, a secure scratchpad for short-lived
-developer secrets on macOS.
+The public pages for [Airlock Scratchpad](https://apps.apple.com/us/app/airlock-scratchpad/id6808056086?mt=12),
+a secure scratchpad for short-lived developer secrets on macOS.
 
 **The app's source is not public; its design document is** — and it is served
 from here, so that claim is one anyone can check rather than one they have to
