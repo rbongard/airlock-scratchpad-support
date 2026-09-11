@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Airlock Scratchpad — Design &amp; Security</title>
+<meta name="description" content="How Airlock Scratchpad stores and protects credentials: the threat model, the cryptography, the limits, and how to check the claims yourself.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="tag">macOS · Design document</span>
+  </header>
+
+  <h1>Airlock Scratchpad — Design &amp; Security</h1>
+  <p><strong>This document describes the app as it is.</strong> It is not a changelog and not a record of how the app came to be; it states what Airlock Scratchpad does with your credentials, what it defends against, and — at the same length — what it does not.</p>
+  <p>The source is closed. That is exactly why this exists: <em>&quot;trust me&quot;</em> is not an argument anyone should accept about a tool that holds credentials, so the design is written down in enough detail to be argued with.</p>
+  <hr>
+  <h2 id="what-it-is">What it is</h2>
+  <p>A local, encrypted scratchpad for the short-lived credentials a developer handles during a working day: API keys, access tokens, database passwords, SSH keys, certificates.</p>
+  <p>The problem it addresses is not that vaults are bad. It is that getting a credential out of a proper vault takes a minute, and you may need it eight times in an hour. So the value gets pasted somewhere convenient — a scratch file, a note, a message to yourself — and that copy is plaintext, indexed by Spotlight, possibly synced, and never cleaned up. A key pasted into a scratch file months ago is still sitting there.</p>
+  <p>Airlock is somewhere to put that copy instead: encrypted, behind a second authentication, and <strong>deleted on a deadline</strong>.</p>
+  <h2 id="what-it-is-not">What it is not</h2>
+  <p><strong>Not a password manager.</strong> Anything that must outlive today&#x27;s work belongs in a real vault — 1Password, Bitwarden, HashiCorp Vault, AWS Secrets Manager. Airlock will not stop you keeping something indefinitely, but nothing about it is built for that, and the app says so on its first Help screen.</p>
+  <p><strong>Not a config store.</strong> It lists plain configuration when importing a <code>.env</code> so nothing is hidden from you, but it does not tick it for import and does not treat it as a credential.</p>
+  <p><strong>Not a sync service.</strong> There is no account, no server, and no network code.</p>
+  <p><strong>Not a team tool.</strong> Shared credentials need access control and an audit trail. Building half of that would be worse than not building it, because it invites a use it cannot safely support.</p>
+  <hr>
+  <h2 id="threat-model">Threat model</h2>
+  <h3 id="what-it-is-built-to-defend-against">What it is built to defend against</h3>
+  <ul><li><strong>A lost or stolen Mac.</strong> The vault is encrypted at rest and the key is held in hardware that cannot be read out.</li><li><strong>Casual local access.</strong> Someone at your unlocked desk sees item <em>names</em>, not secrets — revealing a value requires authenticating again.</li><li><strong>Plaintext sprawl.</strong> Nothing is written to disk in the clear: no cache, no temporary file, no plaintext index. The secret that would otherwise sit in a scratch file has a home that forgets it.</li><li><strong>Accidental disclosure when sharing.</strong> Logs and config dumps can be scrubbed of credentials before they are pasted into a ticket or a chat.</li><li><strong>Screen recording and screen sharing.</strong> The window is excluded from capture while anything sensitive is on screen.</li><li><strong>Indefinite retention.</strong> Expiry is the default rather than an option.</li></ul>
+  <h3 id="what-it-is-explicitly-not-built-to-defend-against">What it is explicitly not built to defend against</h3>
+  <ul><li><strong>Malware running as you.</strong> Code with your privileges on your machine, while the vault is unlocked, sees what you see. No app-level design defeats that.</li><li><strong>A compromised operating system.</strong> Everything here rests on macOS and the Secure Enclave behaving as documented.</li><li><strong>A determined attacker with your unlocked Mac and your finger.</strong> The reveal gate raises the cost of casual access; it is not a defence against coercion.</li><li><strong>Anything you take out.</strong> A key copied to <code>~/.ssh</code>, pasted into a file, or sent to a colleague has left. The app protects the copy it holds.</li></ul>
+  <hr>
+  <h2 id="no-network-no-dependencies">No network, no dependencies</h2>
+  <p><strong>There is no networking code in the app.</strong> Not disabled, not optional — absent. No <code>URLSession</code>, no sockets, no web views, and the sandbox entitlement for network access is not requested, so macOS would refuse the attempt even if some code tried.</p>
+  <p>That single fact is what makes most other claims checkable: nothing Airlock holds can reach anywhere, because the app has no means of sending it.</p>
+  <p>There are <strong>no third-party libraries and no package dependencies</strong>. Every cryptographic primitive is Apple&#x27;s own — CryptoKit and CommonCrypto. This is a deliberate limit, not a preference: a dependency is code you did not write, running with your secrets in reach, and each one makes you part of a supply chain you did not choose.</p>
+  <p>It also has a cost, stated plainly below rather than glossed over.</p>
+  <hr>
+  <h2 id="what-is-stored-and-where">What is stored, and where</h2>
+  <p>One encrypted file, inside the app&#x27;s own sandbox container on your Mac.</p>
+  <p>Everything is inside that single encrypted payload — items, their names, their types, their deadlines, and the projects you filed them under. There is no index, no metadata table, and no list of names outside the encryption. Somebody holding the file learns nothing from it but its approximate size.</p>
+  <p>Project names are part of the encrypted payload for the same reason: a project called <code>acme-acquisition</code> tells a reader a great deal before they have seen a single secret.</p>
+  <p><strong>Padding.</strong> The payload is padded to 4 KB blocks before encryption, so the file&#x27;s size indicates roughly how much you keep rather than how many items you have.</p>
+  <hr>
+  <h2 id="encryption">Encryption</h2>
+  <p><strong>AES-256-GCM</strong>, via CryptoKit, over the whole payload.</p>
+  <p>GCM is an <em>authenticated</em> cipher, and that matters more here than the key size: a file that has been modified — even by a single bit — <strong>fails to open</strong> rather than decrypting into something plausible. Corruption and tampering are the same event, and both are refused rather than guessed at.</p>
+  <h2 id="the-vault-key-and-the-three-ways-in">The vault key, and the three ways in</h2>
+  <p>A random <strong>256-bit vault key</strong> encrypts the payload. That key is never written down in any form. What the file holds is the key <em>wrapped</em> — itself encrypted — under each unlock method you have enrolled. Each wrap is useless without the thing that opens it.</p>
+  <h3 id="touch-id-or-your-login-password">Touch ID (or your login password)</h3>
+  <p>A P-256 key is generated <strong>inside the Secure Enclave</strong> and never leaves it. It cannot be exported, copied, or moved to another Mac, because the hardware provides no operation that would emit it. The vault key is wrapped to it by key agreement, with the wrapping key derived through <strong>HKDF-SHA256</strong>.</p>
+  <p>The Enclave releases its half only on <em>user presence</em>, which is what makes the Touch ID prompt a gate rather than a question.</p>
+  <p>On a Mac without Touch ID this uses your <strong>login password</strong> instead, through the same system mechanism. Nothing about the design requires biometrics.</p>
+  <h3 id="the-backup-password">The backup password</h3>
+  <p>Optional. Run through <strong>PBKDF2-HMAC-SHA512 at 210,000 iterations</strong> to derive a key-encryption key. The iteration count is stored alongside the wrap, so it can be raised in a later version without stranding vaults created under the old one.</p>
+  <p>A password must be at least 15 characters and is checked against a list of known-compromised passwords. There are no composition rules — length is what matters, and a memorable passphrase of several words beats a short complicated one.</p>
+  <h3 id="the-recovery-code">The recovery code</h3>
+  <p>Optional, and the one to set up. <strong>160 bits</strong> from the system&#x27;s random number generator, displayed once, printable, derived with <strong>HKDF-SHA256</strong>.</p>
+  <p><strong>Why it skips the slow derivation.</strong> Iteration counts exist to make <em>guessing</em> expensive, and guessing is only a threat when the secret is guessable. A password you invented has perhaps 40 bits of real entropy, which is why it needs 210,000 rounds standing in front of it. A recovery code has 160 bits and nothing to guess — there is no shortcut for an attacker to be slowed down on. A slow KDF there would cost you time and buy nothing.</p>
+  <p>The alphabet excludes the characters that are misread off paper, and unlocking accepts them interchangeably, because a recovery code that fails because someone wrote a capital I is not a recovery code.</p>
+  <h3 id="all-three-open-the-same-key">All three open the same key</h3>
+  <p>Which is why adding or removing an unlock method never re-encrypts your data and never puts it at risk. They differ in how <em>they</em> are protected, not in what they open.</p>
+  <p><strong>There is no reset.</strong> No server, no account, no recovery link. With Touch ID alone, losing the Mac loses the vault — the Enclave key is bound to that machine. That is the design working as intended, and it is the reason the recovery code exists.</p>
+  <h3 id="one-honest-caveat">One honest caveat</h3>
+  <p>CryptoKit ships <strong>no memory-hard key-derivation function</strong> — no Argon2id, no scrypt — and the no-third-party-crypto rule is not negotiable for a tool like this. PBKDF2-HMAC-SHA512 at 210,000 iterations is therefore the strongest option genuinely available here, not the strongest option that exists.</p>
+  <p>That trade is deliberate. It is also why the recovery code is offered: it does not depend on a human-chosen secret at all.</p>
+  <hr>
+  <h2 id="while-the-app-is-running">While the app is running</h2>
+  <ul><li><strong>Decrypted items exist only in memory</strong>, and only while unlocked.</li><li><strong>Locking discards the key and every decrypted value.</strong> It happens on inactivity, on demand, and when you close the window.</li><li><strong>Revealing asks again.</strong> Being inside an unlocked vault is not consent to see a secret. After a successful reveal there is a grace period so you are not prompted repeatedly — but the <em>gesture</em> remains on every secret, so clicking through your vault does not expose everything you clicked.</li><li><strong>Copying counts as access</strong> and is gated the same way. You do not have to look at a secret to use it.</li><li><strong>The window is excluded from screen capture and screen sharing</strong> while locked and while anything is revealed. Recording software gets a blank window.</li><li><strong>Copied secrets are marked concealed</strong> on the clipboard, and the clipboard is cleared automatically. The concealed flag is a convention that clipboard-history tools honour voluntarily — macOS does not enforce it — so the auto-clear is the part that does not depend on anyone else&#x27;s cooperation.</li></ul>
+  <hr>
+  <h2 id="expiry">Expiry</h2>
+  <p><strong>There is exactly one expiry rule</strong>, and no feature is allowed its own.</p>
+  <p>Every item has a deadline — three days by default, adjustable globally and per item. When it passes, the item goes: to the Recycle Bin if you have enabled one, permanently if you have not.</p>
+  <ul><li><strong>Editing does not reset the clock.</strong> Changing a secret&#x27;s name or fields is not evidence you still need it. Neither is moving it between projects. Only changing the expiry changes the expiry.</li><li><strong>A credential&#x27;s own lifetime is tracked separately.</strong> A certificate&#x27;s <code>notAfter</code>, a JWT&#x27;s <code>exp</code>, a session token&#x27;s expiry are read and kept apart from Airlock&#x27;s deadline, so the app can say <em>&quot;this token is dead&quot;</em> as distinct from <em>&quot;this copy is being tidied away&quot;</em>.</li><li><strong>A credential that outlives its copy by a wide margin is flagged</strong>, not silently truncated. A 90-day certificate against a 3-day default is a decision for you to make.</li></ul>
+  <p>Where a feature seems to want its own expiry behaviour, the app surfaces the consequence instead. Importing a rotated value shows how long the item it replaces has left, rather than quietly restarting its clock.</p>
+  <p>Reference documents kept in the app are the one thing that does not expire — they contain no credentials, and a reference page that deleted itself would be worse than useless.</p>
+  <hr>
+  <h2 id="scrubbing-before-you-share">Scrubbing before you share</h2>
+  <p><strong>Scrub for Sharing</strong> takes text on the clipboard — a log, a config dump, a stack trace — and replaces credentials in it with placeholders.</p>
+  <p>It runs in two passes.</p>
+  <p>1. <strong>Every secret your vault holds</strong> that appears in the text is removed by exact match. Nothing has to be recognised, so an in-house token format that no heuristic could guess is still caught — provided you have stored it. Where the item has an export variable, the placeholder names it, so the text still says what was there without saying what it was. 2. <strong>Shape rules</strong> then run for anything the vault has never seen: recognisable vendor tokens, JSON web tokens, passwords inside connection strings, named assignments that look like credentials.</p>
+  <p>The second pass is deliberately cautious. It removes only what it is confident about, because a scrubber that mangles ordinary log lines is one you would turn off — which means a credential you have never stored, in a format it does not recognise, <strong>can still get through</strong>.</p>
+  <p>You are shown exactly what was found and what the result looks like before anything is copied back. <strong>Read it before you send it.</strong></p>
+  <hr>
+  <h2 id="what-this-does-not-protect-you-from">What this does not protect you from</h2>
+  <p>A security page that lists only strengths is marketing. These are real.</p>
+  <ul><li><strong>Malware running as you, while the vault is unlocked.</strong> It sees what you see.</li><li><strong>Memory.</strong> Key material and derivation buffers are wiped where the language allows it, but Swift&#x27;s <code>String</code> can move and copy itself, so a revealed secret cannot be guaranteed gone from memory until the process exits.</li><li><strong>Anything you export.</strong> A private key copied to <code>~/.ssh</code> is no longer protected by anything here. Generated SSH keys carry no passphrase — the app cannot add one, because OpenSSH protects private keys with a bcrypt KDF that macOS does not provide — and the app says so on the item rather than leaving you to discover it.</li><li><strong>A lost Mac with no recovery code.</strong> Unrecoverable by design.</li><li><strong>A shoulder, a camera, or a coerced finger.</strong> The reveal gate raises the cost of casual access. It is not a defence against a person standing next to you.</li></ul>
+  <hr>
+  <h2 id="checking-the-claims-yourself">Checking the claims yourself</h2>
+  <p>The source is closed, so here is what you can verify without it.</p>
+  <p><strong>That it requests no network access</strong>, and exactly three entitlements:</p>
+  <pre><code>codesign -d --entitlements - /Applications/Airlock.app</code></pre>
+  <p>You should see <code>app-sandbox</code>, <code>files.user-selected.read-write</code> and <code>print</code>, and nothing granting network, camera, microphone, contacts, or location. A build installed from the App Store carries exactly those. (A developer build also carries <code>get-task-allow</code>, which is what makes it debuggable and is not present in a released one.)</p>
+  <p><strong>That it links no third-party frameworks:</strong></p>
+  <pre><code>otool -L /Applications/Airlock.app/Contents/MacOS/Airlock</code></pre>
+  <p>Every entry should be inside <code>/System/Library</code> or <code>/usr/lib</code>.</p>
+  <p><strong>That it talks to nothing.</strong> Watch it with Little Snitch, LuLu, or any outbound firewall, for as long as you like. There is nothing to see, which is the point.</p>
+  <p><strong>That the vault is opaque.</strong> The file lives in the app&#x27;s container under <code>~/Library/Containers/com.rabcon.AirlockScratchpad/</code>. Open it in any editor: it is ciphertext, padded, with no readable names.</p>
+  <hr>
+  <h2 id="non-goals-and-why">Non-goals, and why</h2>
+  <ul><li><strong>Sync.</strong> Would need a server or a cloud account, and a secret you need on two machines belongs somewhere with proper access control.</li><li><strong>Sharing.</strong> Needs access control and an audit trail. Half of that is worse than none.</li><li><strong>TOTP codes, autofill, browser integration.</strong> Each is individually reasonable and collectively they turn this into a worse password manager.</li><li><strong>Third-party cryptography</strong>, including for bcrypt-protected SSH keys. The gap is made loud instead: the app tells you the key is unprotected and gives you the exact command to fix it after export.</li><li><strong>A backup or export of the vault.</strong> Deliberate. These credentials should also exist somewhere that is designed to keep them; an export would encourage treating this as the place they live.</li></ul>
+  <hr>
+  <p><em>Airlock Scratchpad · macOS · SwiftUI · CryptoKit · no dependencies</em></p>
+
+  <nav class="crumbs">
+    <a href="index.html">Support</a> ·
+    <a href="why.html">Why Airlock exists</a> ·
+    <a href="privacy.html">Privacy policy</a>
+  </nav>
+
+  <footer>
+    <span>Airlock Scratchpad — macOS</span>
+    <span>© 2026 Richie Bongard</span>
+  </footer>
+
+</div>
+</body>
+</html>

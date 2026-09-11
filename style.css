@@ -111,6 +111,32 @@ code, kbd {
 
 kbd { border: 1px solid var(--rule); }
 
+/* Command blocks on the design page. The inner <code> drops its own inline
+   background so the block reads as one surface rather than a striped one. */
+pre {
+  background: var(--sunk);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 0.85rem 1rem;
+  margin: 0 0 1.15rem;
+  max-width: var(--measure);
+  overflow-x: auto;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: 0.85em;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  margin: 2.25rem 0;
+  max-width: var(--measure);
+}
+
 .callout {
   border-left: 3px solid var(--amber);
   background: var(--amber-dim);

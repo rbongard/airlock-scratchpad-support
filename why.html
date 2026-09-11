@@ -1,0 +1,709 @@
+<title>Why Airlock Scratchpad Exists</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --ground:    #f3f5f8;
+    --surface:   #ffffff;
+    --sunk:      #e9edf2;
+    --ink:       #131820;
+    --slate:     #59657a;
+    --faint:     #8b98ab;
+    --rule:      #dbe2ea;
+    --accent:    #1d4f8c;
+    --accent-dim:#e2ebf6;
+    --amber:     #9a5c0c;
+    --amber-dim: #f7ecda;
+
+    --measure: 63ch;
+    --step-0: 1.0625rem;
+    --step-1: 1.3rem;
+    --step-2: 1.75rem;
+    --step-3: 2.6rem;
+    --step-4: 4rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:    #0e1217;
+      --surface:   #161c24;
+      --sunk:      #1c232d;
+      --ink:       #e7ecf3;
+      --slate:     #9dabbd;
+      --faint:     #6d7c90;
+      --rule:      #29323e;
+      --accent:    #79aae8;
+      --accent-dim:#1a2b40;
+      --amber:     #d9a052;
+      --amber-dim: #33261492;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:    #0e1217;
+    --surface:   #161c24;
+    --sunk:      #1c232d;
+    --ink:       #e7ecf3;
+    --slate:     #9dabbd;
+    --faint:     #6d7c90;
+    --rule:      #29323e;
+    --accent:    #79aae8;
+    --accent-dim:#1a2b40;
+    --amber:     #d9a052;
+    --amber-dim: #33261492;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-size: var(--step-0);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 74rem;
+    margin: 0 auto;
+    padding: 0 1.75rem 6rem;
+  }
+
+  .col {
+    max-width: var(--measure);
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+  }
+
+  h1, h2, h3 { text-wrap: balance; margin: 0; }
+
+  h1 {
+    font-family: "Instrument Serif", Georgia, "Times New Roman", serif;
+    font-size: var(--step-4);
+    font-weight: 400;
+    line-height: 0.98;
+    letter-spacing: -0.015em;
+  }
+
+  h2 {
+    font-family: "Instrument Serif", Georgia, serif;
+    font-size: var(--step-3);
+    font-weight: 400;
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+  }
+
+  h3 {
+    font-size: var(--step-1);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  p { margin: 0; }
+  strong { font-weight: 600; }
+  em { font-style: italic; }
+
+  code, .mono {
+    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.88em;
+  }
+
+  code {
+    background: var(--sunk);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+  }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .lede {
+    font-size: var(--step-1);
+    line-height: 1.5;
+    color: var(--slate);
+  }
+
+  /* ── Masthead ─────────────────────────────────────────── */
+
+  header.masthead {
+    padding: 5rem 0 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: var(--measure);
+  }
+
+  .wordmark {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .wordmark h1 .second {
+    display: block;
+    color: var(--slate);
+    font-size: 0.55em;
+    letter-spacing: 0.01em;
+  }
+
+  .wordmark .tag {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 2px;
+    padding: 0.2em 0.5em;
+    white-space: nowrap;
+  }
+
+  /* ── The airlock diagram ──────────────────────────────── */
+
+  .chambers {
+    display: grid;
+    grid-template-columns: 1fr auto 1.15fr auto 1fr;
+    align-items: stretch;
+    gap: 0;
+    margin: 3.5rem 0 1rem;
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    overflow-x: auto;
+  }
+
+  .chamber {
+    padding: 1.5rem 1.35rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    min-width: 11rem;
+  }
+
+  .chamber.middle {
+    background: var(--accent-dim);
+    border-left: 1px solid var(--rule);
+    border-right: 1px solid var(--rule);
+  }
+
+  .chamber .who {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .chamber .what {
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .chamber .note {
+    font-size: 0.85rem;
+    color: var(--slate);
+    line-height: 1.45;
+  }
+
+  .chamber.middle .what { color: var(--accent); }
+
+  .door {
+    width: 2.75rem;
+    display: grid;
+    place-items: center;
+    color: var(--faint);
+    font-size: 0.95rem;
+    background: repeating-linear-gradient(
+      -45deg, transparent 0 5px, var(--sunk) 5px 10px);
+  }
+
+  .chambers-caption {
+    font-size: 0.85rem;
+    color: var(--slate);
+    max-width: 46rem;
+    margin-bottom: 4rem;
+  }
+
+  /* ── Sections ─────────────────────────────────────────── */
+
+  section {
+    padding: 3.25rem 0;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .section-head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    max-width: var(--measure);
+  }
+
+  /* ── The three rules ──────────────────────────────────── */
+
+  .rules {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 0;
+    border: 1px solid var(--rule);
+    background: var(--surface);
+  }
+
+  .rule-item {
+    padding: 1.6rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    border-right: 1px solid var(--rule);
+  }
+  .rule-item:last-child { border-right: none; }
+
+  .rule-item .n {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+  }
+
+  .rule-item p {
+    font-size: 0.92rem;
+    color: var(--slate);
+    line-height: 1.5;
+  }
+
+  /* ── Comparison table ─────────────────────────────────── */
+
+  .table-scroll { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.94rem;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    min-width: 34rem;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+
+  thead th {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--faint);
+    font-weight: 500;
+    background: var(--sunk);
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  td.who { font-weight: 600; width: 34%; }
+  td .sub { display: block; color: var(--slate); font-size: 0.86rem; font-weight: 400; }
+
+  .row-mine td { background: var(--accent-dim); }
+  .row-mine td.who { color: var(--accent); }
+
+  /* ── Callouts ─────────────────────────────────────────── */
+
+  .callout {
+    border-left: 3px solid var(--amber);
+    background: var(--amber-dim);
+    padding: 1.15rem 1.3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-width: var(--measure);
+  }
+
+  .callout .head {
+    font-weight: 600;
+    color: var(--amber);
+    font-size: 0.95rem;
+  }
+  .callout p { font-size: 0.94rem; line-height: 1.55; }
+
+  /* ── Clock strip ──────────────────────────────────────── */
+
+  .clocks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+  }
+
+  .clock {
+    background: var(--surface);
+    padding: 1.5rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .clock .label {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+  .clock .owner { font-size: 1.05rem; font-weight: 600; }
+  .clock p { font-size: 0.9rem; color: var(--slate); line-height: 1.5; }
+  .clock .says {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.82rem;
+    color: var(--ink);
+    background: var(--sunk);
+    padding: 0.5rem 0.7rem;
+    border-radius: 3px;
+  }
+
+  /* ── Didn't build list ────────────────────────────────── */
+
+  .nogo {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border-top: 1px solid var(--rule);
+    max-width: 52rem;
+  }
+
+  .nogo-item {
+    display: grid;
+    grid-template-columns: minmax(9rem, 14rem) 1fr;
+    gap: 1.5rem;
+    padding: 1.05rem 0;
+    border-bottom: 1px solid var(--rule);
+    align-items: baseline;
+  }
+
+  .nogo-item .thing { font-weight: 600; font-size: 0.98rem; }
+  .nogo-item .why { color: var(--slate); font-size: 0.94rem; line-height: 1.5; }
+
+  @media (max-width: 34rem) {
+    .nogo-item { grid-template-columns: 1fr; gap: 0.25rem; }
+  }
+
+  /* ── Spec ─────────────────────────────────────────────── */
+
+  .spec {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    font-size: 0.9rem;
+  }
+
+  .spec div {
+    background: var(--surface);
+    padding: 0.95rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .spec .k {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+  .spec .v { font-variant-numeric: tabular-nums; }
+
+  /* ── Close ────────────────────────────────────────────── */
+
+  .close {
+    margin-top: 4rem;
+    padding: 2.75rem 0 0;
+    border-top: 2px solid var(--ink);
+    max-width: var(--measure);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .close .big {
+    font-family: "Instrument Serif", Georgia, serif;
+    font-size: var(--step-2);
+    line-height: 1.2;
+  }
+
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--rule);
+    font-size: 0.82rem;
+    color: var(--faint);
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  ul.plain { margin: 0; padding-left: 1.15rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  ul.plain li { color: var(--slate); }
+  ul.plain li strong { color: var(--ink); }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="wordmark">
+      <h1>Airlock<span class="second">Scratchpad</span></h1>
+      <span class="tag">macOS · v1.0</span>
+    </div>
+    <p class="lede">A secure scratchpad for the developer secrets you are working with <em>right now</em> — one that encrypts them, and forgets them on purpose.</p>
+  </header>
+
+  <div class="chambers">
+    <div class="chamber">
+      <span class="who">Outside</span>
+      <span class="what">Where secrets live</span>
+      <span class="note">1Password, Bitwarden, HashiCorp Vault, AWS Secrets Manager. Access control, audit trails, rotation.</span>
+    </div>
+    <div class="door" aria-hidden="true">→</div>
+    <div class="chamber middle">
+      <span class="who">The chamber</span>
+      <span class="what">Airlock · 3 days</span>
+      <span class="note">Encrypted, expiring, hidden behind a second unlock. Holds nothing permanently, by design.</span>
+    </div>
+    <div class="door" aria-hidden="true">→</div>
+    <div class="chamber">
+      <span class="who">Inside</span>
+      <span class="what">Where the work happens</span>
+      <span class="note">Your terminal, your editor, the eight times an hour you need that token today.</span>
+    </div>
+  </div>
+  <p class="chambers-caption">An airlock is not a room you live in. It is the chamber between two pressures, where you pass through safely — and it is empty again afterwards.</p>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">The problem</span>
+      <h2>Secrets leak sideways, not through the front door</h2>
+    </div>
+    <div class="col">
+      <p>Nobody decides to keep a production database password in a text file. It happens anyway, because the alternative is unlocking a vault, navigating to an entry, copying a field, and doing that again four minutes later when the shell scrolls away.</p>
+      <p>So the key lands somewhere convenient. A scratch file. An untitled tab. A note. A message to yourself. The clipboard, for the rest of the day.</p>
+      <p><strong>Those copies are the actual problem.</strong> They are in plaintext. They are indexed by Spotlight. They sync to other machines. Backups pick them up. And crucially, <em>nothing ever cleans them up</em> — a key pasted into a scratch file in March is still sitting there in September, long after it stopped being needed and long before anyone thinks to rotate it.</p>
+      <p>The vault did its job. The leak happened downstream of it, in the gap between where secrets are stored and where work actually happens.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">Positioning</span>
+      <h2>This is not a password manager</h2>
+    </div>
+    <div class="col">
+      <p>We should be blunt about this, because getting it wrong is the one way Airlock Scratchpad could make things worse rather than better.</p>
+      <p>Anything that has to outlive the work you are doing today belongs in a real vault. Airlock has no sharing, no access control, no audit trail, no rotation and no recovery. It is not a system of record and it will never become one.</p>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Tool</th>
+            <th>Holds</th>
+            <th>For how long</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="who">Secrets manager<span class="sub">Vault, AWS, GCP</span></td>
+            <td>What production reads at runtime</td>
+            <td>Indefinitely, with rotation</td>
+          </tr>
+          <tr>
+            <td class="who">Password manager<span class="sub">1Password, Bitwarden</span></td>
+            <td>Your credentials and your team's</td>
+            <td>Indefinitely, shared and audited</td>
+          </tr>
+          <tr class="row-mine">
+            <td class="who">Airlock</td>
+            <td>The working copy on your desk today</td>
+            <td>Three days, then gone</td>
+          </tr>
+          <tr>
+            <td class="who">A scratch file<span class="sub">What this replaces</span></td>
+            <td>Whatever you pasted, in the clear</td>
+            <td>Forever, unnoticed</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="col">Airlock competes with the fourth row. It has no opinion about the first two, except that you should be using them.</p>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">Design rules</span>
+      <h2>Three commitments the app actually keeps</h2>
+    </div>
+
+    <div class="rules">
+      <div class="rule-item">
+        <span class="n">01</span>
+        <h3>Everything expires</h3>
+        <p>Three days unless you say otherwise. There is exactly one expiry rule in the app — nothing sets its own deadline behind your back, and editing a secret does not buy it more time. Editing is not evidence you still need something.</p>
+      </div>
+      <div class="rule-item">
+        <span class="n">02</span>
+        <h3>Nothing is stored in the clear</h3>
+        <p>Not on disk, not in a temp file, not in a database. Items exist decrypted in memory only, and only while the vault is unlocked. Locking drops every value.</p>
+      </div>
+      <div class="rule-item">
+        <span class="n">03</span>
+        <h3>Being in the app is not permission</h3>
+        <p>Unlocking shows you what you have — names, types, deadlines. Seeing or copying an actual value asks you to authenticate again, every time.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">Expiry</span>
+      <h2>A credential and a copy of it die on different days</h2>
+    </div>
+    <div class="col">
+      <p>This distinction turned out to matter more than anything else in the design. A certificate is valid for ninety days. Your copy of it should not be.</p>
+      <p>So Airlock keeps two clocks and never conflates them. When a credential states its own lifetime — a certificate's <code>notAfter</code>, a JWT's <code>exp</code>, an AWS session token's expiry — that gets read and kept separately.</p>
+    </div>
+
+    <div class="clocks">
+      <div class="clock">
+        <span class="label">Clock one · the issuer's</span>
+        <span class="owner">Validity</span>
+        <p>When the credential stops working. Not your decision, and not something Airlock can change.</p>
+        <span class="says">"This token is dead."</span>
+      </div>
+      <div class="clock">
+        <span class="label">Clock two · yours</span>
+        <span class="owner">Hygiene</span>
+        <p>When this copy gets tidied away. Entirely your decision, adjustable globally or per item.</p>
+        <span class="says">"This copy is being cleaned up."</span>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="head">Mismatches are flagged, never silently resolved</span>
+      <p>A ninety-day certificate against a three-day default is not a bug to fix quietly — it is a decision you should get to make. Airlock surfaces it and waits. Extend the copy, or move the credential somewhere built to hold it for ninety days.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">In practice</span>
+      <h2>The whole point is that it is faster than the bad habit</h2>
+    </div>
+    <div class="col">
+      <p>A tool that protects secrets by being tedious does not protect anything, because people route around it. Airlock has to beat a scratch file on convenience or it fails on its own terms.</p>
+      <ul class="plain">
+        <li><strong>Copy, then ⌘⇧V.</strong> Airlock recognises what you pasted — a <code>ghp_</code> GitHub token, an <code>sk_live_</code> Stripe key, a PEM block, a connection URI — and opens the matching template with the fields already filled in. One keystroke, no form.</li>
+        <li><strong>Drop a <code>.env</code> file.</strong> It reads the whole thing, shows you which entries are secrets and which are plain config, and tells you what you already hold. Re-import after a rotation and it reports <span class="mono">"7 unchanged, 2 rotated, 1 new"</span> instead of duplicating everything.</li>
+        <li><strong>Copy without looking.</strong> You rarely need to <em>see</em> a secret, only to paste it. Copy sits next to Reveal and never requires unmasking anything.</li>
+        <li><strong>Scrub before sharing.</strong> About to paste a log into a ticket? One button replaces the credentials in it with placeholders, and shows you exactly what it found before anything leaves.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">Non-goals</span>
+      <h2>What we deliberately did not build</h2>
+    </div>
+    <p class="col">Each of these was considered and rejected. The absences are the design.</p>
+
+    <div class="nogo">
+      <div class="nogo-item">
+        <span class="thing">Sync and sharing</span>
+        <span class="why">A shared secret needs access control and an audit trail. Building half of that is worse than building none: it invites the use it cannot safely support.</span>
+      </div>
+      <div class="nogo-item">
+        <span class="thing">A recovery path</span>
+        <span class="why">No server, no account, no reset link. The Secure Enclave key is bound to one Mac. That is the security model working as intended, and it is why the password backup exists.</span>
+      </div>
+      <div class="nogo-item">
+        <span class="thing">Third-party packages</span>
+        <span class="why">A security app's supply chain is part of its threat model. Apple frameworks only, zero third-party crypto — an unaudited AES implementation would be the highest-risk dependency this app could take.</span>
+      </div>
+      <div class="nogo-item">
+        <span class="thing">Browser autofill</span>
+        <span class="why">A different problem, already solved well by password managers, and one that would mean injecting credentials into pages Airlock cannot vouch for.</span>
+      </div>
+      <div class="nogo-item">
+        <span class="thing">A default that never expires</span>
+        <span class="why">Permanence is available per item, but it is opt-in and gated. The moment "keep forever" becomes the easy path, this stops being an airlock and starts being another place secrets accumulate.</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="eyebrow">How it is built</span>
+      <h2>The specifics, since a security claim is worthless without them</h2>
+    </div>
+
+    <div class="spec">
+      <div><span class="k">Encryption</span><span class="v">AES-256-GCM · CryptoKit</span></div>
+      <div><span class="k">Key protection</span><span class="v">Secure Enclave P-256, user presence</span></div>
+      <div><span class="k">Key wrapping</span><span class="v">ECDH + HKDF-SHA256</span></div>
+      <div><span class="k">Password KDF</span><span class="v">PBKDF2-HMAC-SHA512 · 210,000 rounds</span></div>
+      <div><span class="k">Password floor</span><span class="v">15 characters, breach-screened</span></div>
+      <div><span class="k">Recovery code</span><span class="v">160 bits · HKDF-SHA256 · shown once, printable</span></div>
+      <div><span class="k">Payload padding</span><span class="v">4 KB blocks — file size leaks no item count</span></div>
+      <div><span class="k">Sandbox</span><span class="v">Enabled · app's own container</span></div>
+      <div><span class="k">Screen capture</span><span class="v">Window excluded while revealed</span></div>
+      <div><span class="k">Dependencies</span><span class="v">None</span></div>
+    </div>
+
+    <div class="col">
+      <p>One honest caveat on that list. CryptoKit ships no memory-hard key-derivation function — no Argon2id, no scrypt — and the no-third-party-crypto rule is not negotiable for a security tool. PBKDF2 via CommonCrypto at 210,000 iterations is therefore the strongest option genuinely available, not the strongest option that exists. That trade was made deliberately, and it is written down rather than glossed over.</p>
+    </div>
+  </section>
+
+  <div class="close">
+    <p class="big">If a secret needs to outlive the work, it belongs somewhere else — and Airlock will tell you so.</p>
+    <p class="col">Everything here follows from one idea: the dangerous copy of a secret is not the one in the vault. It is the one on your desk that nobody is keeping track of. Give that copy a proper home and an expiry date, and the habit stops being a liability.</p>
+  </div>
+
+  <p style="margin:2.5rem 0 0;font-size:0.9rem;">
+    <a href="index.html">Support</a> ·
+    <a href="design.html">Design &amp; security</a> ·
+    <a href="privacy.html">Privacy policy</a>
+  </p>
+
+  <footer>
+    <span>Airlock Scratchpad v1.0 — macOS</span>
+    <span class="mono">SwiftUI · CryptoKit · no dependencies</span>
+    <span>© 2026 Richie Bongard</span>
+  </footer>
+
+</div>
